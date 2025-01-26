@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天室</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        #username-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        #chat-container {
+            display: none;
+            position: relative;
+        }
+        #current-username {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        #change-username-button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        #change-username-button:hover {
+            background-color: #0056b3;
+        }
+        #messages {
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 5px;
+            word-wrap: break-word; /* 自动换行 */
+        }
+        .message {
+            max-width: 100%; /* 限制消息的最大宽度 */
+            overflow-wrap: break-word; /* 防止长单词溢出 */
+        }
+    </style>
+</head>
+<body>
+    <div id="username-container">
+        <input id="username-input" type="text" placeholder="请输入用户名" />
+        <button id="set-username-button">设置用户名</button>
+    </div>
+
+    <div id="chat-container">
+        <div id="current-username">
+            当前用户名: <span id="username-display"></span>
+            <button id="change-username-button">更改用户名</button>
+        </div>
+        <!-- 聊天区域 -->
+        <h2>聊天室</h2>
+        <div id="messages"></div>
+        <input id="message-input" type="text" placeholder="输入消息...">
+        <button id="send-button">发送</button>
+    </div>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        const usernameContainer = document.getElementById('username-container');
+        const usernameInput = document.getElementById('username-input');
+        const setUsernameButton = document.getElementById('set-username-button');
+        const chatContainer = document.getElementById('chat-container');
+        const currentUsernameDiv = document.getElementById('current-username');
+        const usernameDisplay = document.getElementById('username-display');
+        const changeUsernameButton = document.getElementById('change-username-button');
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        let username = localStorage.getItem('username') || '';
+
+        if (username) {
+            usernameContainer.style.display = 'none';
+            chatContainer.style.display = 'block';
+            usernameDisplay.textContent = username;
+            socket.emit('join', username);
+        }
+
+        setUsernameButton.addEventListener('click', () => {
+            const enteredUsername = usernameInput.value.trim();
+            if (enteredUsername) {
+                username = enteredUsername;
+                localStorage.setItem('username', username);
+                usernameContainer.style.display = 'none';
+                chatContainer.style.display = 'block';
+                usernameDisplay.textContent = username;
+                socket.emit('join', username);
+            } else {
+                alert('请输入有效的用户名');
+            }
+        });
+
+        changeUsernameButton.addEventListener('click', () => {
+            usernameContainer.style.display = 'block';
+            chatContainer.style.display = 'none';
+        });
+
+        function sendMessage() {
+            const msg = messageInput.value;
+            if (msg.trim() !== '') {
+                const fullMessage = `${username}: ${msg}`;
+                socket.send(fullMessage);
+                messageInput.value = '';
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        socket.on('message', (msg) => {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = msg;
+            messageElement.classList.add('message');
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+    </script>
+</body>
+</html>

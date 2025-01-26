@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en"></html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="""width=device-width, initial-scale=""1.0">
+    <title>登录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('/static/background2.jpg'); /* 设置背景图片 */
+            background-size: cover;  /* 背景图片铺满整个屏幕 */
+            background-position: center;  /* 背景图片居中 */
+            background-repeat: no-repeat;  /* 防止背景图片重复 */
+        }
+        #login-container {
+            background: rgba(255, 255, 255, 0.8); /* 设置半透明背景 */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #login-form label {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        #login-form input {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 300px;
+        }
+        #login-form button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        #login-form button:hover {
+            background-color: #0056b3;
+        }
+        #error-message {
+            color: rgb(255, 100, 100);
+            display: none;
+            margin-top: 10px;
+        }
+        #retry-container {
+            display: none;
+            margin-top: 10px;
+            text-align: center;
+        }
+        #retry-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #5580dc;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        #retry-button:hover {
+            background-color: #2357c8;
+        }
+    </style>
+</head>
+<body>
+    <div id="login-container">
+        <form id="login-form" action="/login" method="post">
+            <label for="key">密钥</label>
+            <input type="password" id="key" name="key" required>
+            <button type="submit">登录</button>
+        </form>
+        <p id="error-message">密钥错误</p>
+        <div id="retry-container">
+            <button id="retry-button" onclick="retry()">重试</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('login-form').onsubmit = function(event) {
+            event.preventDefault(); // 阻止表单提交
+            const key = document.getElementById('key').value;
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `key=${key}`
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    document.getElementById('error-message').style.display = 'block';
+                    document.getElementById('retry-container').style.display = 'block';
+                } else {
+                    window.location.href = '/chat';
+                }
+            });
+        };
+
+        function retry() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('retry-container').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
